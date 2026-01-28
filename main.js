@@ -1,5 +1,6 @@
 var audioCtx;
 var osc;
+var waveformType = 'sine';
 
 const keyboardFrequencyMap = {
         '90': 261.625565300598634,  //Z - C
@@ -55,8 +56,18 @@ function keyUp(event) {
 function playNote(key) {
         const osc = audioCtx.createOscillator();
         osc.frequency.setValueAtTime(keyboardFrequencyMap[key], audioCtx.currentTime)
-        osc.type = 'sine' //choose your favorite waveform
+        osc.type = waveformType
         osc.connect(audioCtx.destination)
         osc.start();
         activeOscillators[key] = osc
 }
+
+document.getElementById('audio-control').addEventListener('click', function () {
+    if (waveformType === 'sine') {
+        waveformType = 'sawtooth';
+        document.getElementById('waveform-type').textContent = "Waveform: Sawtooth";
+    } else {
+        waveformType = 'sine';
+        document.getElementById('waveform-type').textContent = "Waveform: Sine";
+    }
+}, false);
