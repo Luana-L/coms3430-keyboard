@@ -28,8 +28,17 @@ const keyboardFrequencyMap = {
         '85': 987.766602512248223,  //U - B
 }
 
+var globalGain;
+
+const MAX_VOICES = 8;
+const VOICE_GAIN = 1 / MAX_VOICES;
+
 document.addEventListener("DOMContentLoaded", function (event) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        globalGain = audioCtx.createGain();
+        globalGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+        globalGain.connect(audioCtx.destination);
 });
 
 window.addEventListener('keydown', keyDown, false);
@@ -46,18 +55,21 @@ function playNote(key) {
         osc.type = waveformType;
 
         osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
+        gainNode.connect(globalGain);
 
         const now = audioCtx.currentTime;
 
-        const attack = 0.03;
+        const attack = 0.05;
         const decay = 0.15;
-        const sustain = 0.2;
+        const sustain = 0.5 * VOICE_GAIN;
 
         gainNode.gain.cancelScheduledValues(now);
         gainNode.gain.setValueAtTime(0.0001, now);
 
-        gainNode.gain.exponentialRampToValueAtTime(1.0, now + attack);
+        gainNode.gain.exponentialRampToValueAtTime(
+                VOICE_GAIN,
+                now + attack
+        );
         gainNode.gain.exponentialRampToValueAtTime(
                 sustain,
                 now + attack + decay
@@ -80,7 +92,7 @@ function stopNote(key) {
         gainNode.gain.cancelScheduledValues(now);
         gainNode.gain.setTargetAtTime(0.0001, now, releaseTime);
 
-        osc.stop(audioCtx.currentTime + releaseTime * 5);
+        osc.stop(now + releaseTime * 5);
 
         delete activeOscillators[key];
         delete activeGainNodes[key];
