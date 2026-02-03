@@ -132,33 +132,92 @@ document.addEventListener("DOMContentLoaded", function () {
         const keyboardDiv = document.getElementById("keyboard");
         const viz = document.getElementById("viz");
 
-        const displayKeys = [
-                '90', '83', '88', '68', '67', '86', '71', '66', '72', '78', '74', '77',
-                '81', '50', '87', '51', '69', '82', '53', '84', '54', '89', '55', '85'
+        // Define octaves with white keys and black keys
+        // Each octave: [white keys array, black keys array with positions]
+        const octaves = [
+                {
+                        // Upper octave (Q-U row)
+                        white: [
+                                { code: '81', note: 'C', label: 'Q' },
+                                { code: '87', note: 'D', label: 'W' },
+                                { code: '69', note: 'E', label: 'E' },
+                                { code: '82', note: 'F', label: 'R' },
+                                { code: '84', note: 'G', label: 'T' },
+                                { code: '89', note: 'A', label: 'Y' },
+                                { code: '85', note: 'B', label: 'U' }
+                        ],
+                        black: [
+                                { code: '50', note: 'C#', label: '2', position: 35 },  // Between C-D
+                                { code: '51', note: 'D#', label: '3', position: 85 },  // Between D-E
+                                { code: '53', note: 'F#', label: '5', position: 185 }, // Between F-G
+                                { code: '54', note: 'G#', label: '6', position: 235 }, // Between G-A
+                                { code: '55', note: 'A#', label: '7', position: 285 }  // Between A-B
+                        ]
+                },
+                {
+                        // Lower octave (Z-M row)
+                        white: [
+                                { code: '90', note: 'C', label: 'Z' },
+                                { code: '88', note: 'D', label: 'X' },
+                                { code: '67', note: 'E', label: 'C' },
+                                { code: '86', note: 'F', label: 'V' },
+                                { code: '66', note: 'G', label: 'B' },
+                                { code: '78', note: 'A', label: 'N' },
+                                { code: '77', note: 'B', label: 'M' }
+                        ],
+                        black: [
+                                { code: '83', note: 'C#', label: 'S', position: 35 },  // Between C-D
+                                { code: '68', note: 'D#', label: 'D', position: 85 },  // Between D-E
+                                { code: '71', note: 'F#', label: 'G', position: 185 }, // Between F-G
+                                { code: '72', note: 'G#', label: 'H', position: 235 }, // Between G-A
+                                { code: '74', note: 'A#', label: 'J', position: 285 }  // Between A-B
+                        ]
+                }
         ];
 
-        displayKeys.forEach(code => {
+        function createKey(keyData, isBlack, position = null) {
                 const keyDiv = document.createElement("div");
-                keyDiv.className = "key";
-                keyDiv.textContent = String.fromCharCode(code);
-                keyDiv.dataset.key = code;
+                keyDiv.className = isBlack ? "key black" : "key white";
+                keyDiv.textContent = keyData.label;
+                keyDiv.dataset.key = keyData.code;
+
+                if (isBlack && position !== null) {
+                        keyDiv.style.left = position + 'px';
+                }
 
                 keyDiv.addEventListener("mousedown", () => {
-                        playNote(code);
+                        playNote(keyData.code);
                         keyDiv.classList.add("active");
                 });
 
                 keyDiv.addEventListener("mouseup", () => {
-                        stopVoice(code);
+                        stopVoice(keyData.code);
                         keyDiv.classList.remove("active");
                 });
 
                 keyDiv.addEventListener("mouseleave", () => {
-                        stopVoice(code);
+                        stopVoice(keyData.code);
                         keyDiv.classList.remove("active");
                 });
 
-                keyboardDiv.appendChild(keyDiv);
+                return keyDiv;
+        }
+
+        octaves.forEach(octave => {
+                const octaveDiv = document.createElement("div");
+                octaveDiv.className = "octave";
+
+                // Add white keys
+                octave.white.forEach(keyData => {
+                        octaveDiv.appendChild(createKey(keyData, false));
+                });
+
+                // Add black keys on top
+                octave.black.forEach(keyData => {
+                        octaveDiv.appendChild(createKey(keyData, true, keyData.position));
+                });
+
+                keyboardDiv.appendChild(octaveDiv);
         });
 
         function freqToHue(freq) {
